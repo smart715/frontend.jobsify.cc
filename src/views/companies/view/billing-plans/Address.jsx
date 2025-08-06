@@ -1,0 +1,112 @@
+'use client'
+
+// React Imports
+import { useState } from 'react'
+
+// MUI Imports
+import Grid from '@mui/material/Grid2'
+import Card from '@mui/material/Card'
+import CardHeader from '@mui/material/CardHeader'
+import CardContent from '@mui/material/CardContent'
+import TextField from '@mui/material/TextField'
+import Button from '@mui/material/Button'
+import FormControl from '@mui/material/FormControl'
+import InputLabel from '@mui/material/InputLabel'
+import Select from '@mui/material/Select'
+import MenuItem from '@mui/material/MenuItem'
+import InputAdornment from '@mui/material/InputAdornment'
+import { Divider } from '@mui/material'
+
+const Address = () => {
+  // States
+  const [state, setState] = useState('')
+
+  return (
+    <Card>
+      <CardHeader title='Billing Address' />
+      <CardContent>
+        <form>
+          <Grid container spacing={5}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField fullWidth label='Company Name' variant='outlined' placeholder='Pixinvent' />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField fullWidth label='Billing Email' variant='outlined' placeholder='john.doe@example.com' />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField fullWidth label='TAX ID' variant='outlined' placeholder='Enter TAX ID' />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField fullWidth label='VAT Number' variant='outlined' placeholder='Enter VAT Number' />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                fullWidth
+                label='Mobile Number'
+                placeholder='(202) 555-0111'
+                onChange={(e) => {
+                  // Format phone number as user types
+                  let value = e.target.value.replace(/\D/g, '') // Remove non-digits
+                  if (value.length >= 6) {
+                    value = `(${value.slice(0, 3)}) ${value.slice(3, 6)}-${value.slice(6, 10)}`
+                  } else if (value.length >= 3) {
+                    value = `(${value.slice(0, 3)}) ${value.slice(3)}`
+                  }
+                  e.target.value = value
+                }}
+                inputProps={{ 
+                  maxLength: 14,
+                  pattern: "\\([0-9]{3}\\) [0-9]{3}-[0-9]{4}"
+                }}
+                slotProps={{
+                  input: {
+                    startAdornment: <InputAdornment position='start'>US (+1)</InputAdornment>
+                  }
+                }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl fullWidth>
+                <InputLabel>Country</InputLabel>
+                <Select label='Country' value={state} onChange={e => setState(e.target.value)}>
+                  <MenuItem value=''>Select Country</MenuItem>
+                  <MenuItem value='australia'>Australia</MenuItem>
+                  <MenuItem value='canada'>Canada</MenuItem>
+                  <MenuItem value='france'>France</MenuItem>
+                  <MenuItem value='united-kingdom'>United Kingdom</MenuItem>
+                  <MenuItem value='united-states'>United States</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+          <Divider sx={{marginTop: 7, marginBottom: 7}} />
+          <Grid container spacing={5}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField fullWidth label='Address1' variant='outlined' placeholder='Address1' />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField fullWidth label='Address2' variant='outlined' placeholder='Address2' />
+            </Grid>
+            <Grid size={{ xs: 4 }}>
+              <TextField fullWidth label='City' variant='outlined' placeholder='City' />
+            </Grid>
+            <Grid size={{ xs: 4 }}>
+              <TextField fullWidth label='State' variant='outlined' placeholder='California' />
+            </Grid>
+            <Grid size={{ xs: 4 }}>
+              <TextField fullWidth type='number' label='Zip' variant='outlined' placeholder='231465' />
+            </Grid>
+            <Grid size={{ xs: 12 }} className='flex gap-4 flex-wrap'>
+              <Button variant='contained'>Save Changes</Button>
+              <Button variant='outlined' type='reset' color='secondary' onClick={() => setState('')}>
+                Reset
+              </Button>
+            </Grid>
+          </Grid>
+        </form>
+      </CardContent>
+    </Card>
+  )
+}
+
+export default Address

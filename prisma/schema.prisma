@@ -1,0 +1,816 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid()) @db.VarChar(191)
+  userId            String  @db.VarChar(191)
+  type              String  @db.VarChar(191)
+  provider          String  @db.VarChar(191)
+  providerAccountId String  @db.VarChar(191)
+  refresh_token     String? @db.VarChar(191)
+  access_token      String? @db.VarChar(191)
+  expires_at        Int?
+  token_type        String? @db.VarChar(191)
+  scope             String? @db.VarChar(191)
+  id_token          String? @db.VarChar(191)
+  session_state     String? @db.VarChar(191)
+}
+
+model Session {
+  id           String   @id @default(cuid()) @db.VarChar(191)
+  sessiontoken String   @unique @db.VarChar(191)
+  userid       String   @db.VarChar(191)
+  expires      DateTime
+}
+
+model User {
+  id                      String                    @id @default(cuid()) @db.VarChar(191)
+  firstName               String                    @db.VarChar(191)
+  lastName                String                    @db.VarChar(191)
+  email                   String?                   @unique @db.VarChar(191)
+  emailVerified           DateTime?
+  image                   String?                   @db.VarChar(191)
+  hashedPassword          String?                   @db.VarChar(191)
+  role                    user_role                 @default(EMPLOYEE)
+  companyId               String?                   @db.VarChar(191)
+  companyName             String?                   @db.VarChar(191)
+  businessType            String?                   @db.VarChar(191)
+  pricingTierId           String?                   @db.VarChar(191)
+  phoneNumber             String?                   @db.VarChar(191)
+  isTwoFactorEnabled      Boolean                   @default(false)
+  totpSecret              String?                   @db.VarChar(191)
+  tempTotpSecret          String?                   @db.VarChar(191)
+  smsVerified             Boolean                   @default(false)
+  createdAt               DateTime                  @default(dbgenerated("CURRENT_TIMESTAMP(3)"))
+  updatedAt               DateTime                  @default(dbgenerated("CURRENT_TIMESTAMP(3)")) @updatedAt
+  adminFAQs               AdminFAQ[]
+  ModuleFeatureAssignment ModuleFeatureAssignment[]
+  company                 Company?                  @relation(fields: [companyId], references: [id])
+  impersonatedSessions    ImpersonationSession[]    @relation("ImpersonatedUser")
+  originalSessions        ImpersonationSession[]    @relation("OriginalUser")
+  loginDevices            LoginDevice[]
+  smsVerification         SmsVerification?
+}
+
+model VerificationToken {
+  identifier String   @db.VarChar(191)
+  token      String   @unique @db.VarChar(191)
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+model PricingTier {
+  id            String   @id @default(cuid()) @db.VarChar(191)
+  name          String   @unique @db.VarChar(191)
+  price         Int
+  features      Json     @db.Json
+  stripePriceId String?  @db.VarChar(191)
+  createdAt     DateTime @default(dbgenerated("CURRENT_TIMESTAMP(3)"))
+  updatedAt     DateTime @default(dbgenerated("CURRENT_TIMESTAMP(3)")) @updatedAt
+}
+
+model OTP {
+  id        String      @id @default(cuid()) @db.VarChar(191)
+  code      String      @db.VarChar(191)
+  userid    String      @db.VarChar(191)
+  type      otp_type
+  purpose   otp_purpose
+  expiresat DateTime
+  createdat DateTime    @default(dbgenerated("CURRENT_TIMESTAMP(3)"))
+  updatedat DateTime
+}
+
+model Subscription {
+  id                     String              @id @default(cuid()) @db.VarChar(191)
+  userid                 String              @unique @db.VarChar(191)
+  pricingtierid          String              @db.VarChar(191)
+  stripesubscriptionid   String?             @unique @db.VarChar(191)
+  stripecustomerid       String?             @unique @db.VarChar(191)
+  stripepriceid          String?             @db.VarChar(191)
+  stripecurrentperiodend DateTime?
+  status                 subscription_status @default(INCOMPLETE)
+  startdate              DateTime            @default(dbgenerated("CURRENT_TIMESTAMP(3)"))
+  enddate                DateTime?
+  createdat              DateTime            @default(dbgenerated("CURRENT_TIMESTAMP(3)"))
+  updatedat              DateTime            @default(dbgenerated("CURRENT_TIMESTAMP(3)"))
+}
+
+model Make {
+  id   Int    @id @default(autoincrement())
+  name String @db.VarChar(100)
+
+  @@map("makes")
+}
+
+model Model {
+  id      Int     @id @default(autoincrement())
+  name    String  @db.VarChar(100)
+  make_id Int
+  variety String? @db.VarChar(50)
+
+  @@map("models")
+}
+
+model Company {
+  id                           String                         @id @default(cuid())
+  companyId                    String                         @unique
+  companyName                  String
+  companyEmail                 String?
+  companyPhone                 String?
+  companyAddress               String?
+  city                         String?
+  state                        String?
+  zipcode                      String?
+  companyWebsite               String?
+  companyLogo                  String?
+  defaultCurrency              String?                        @default("USD")
+  language                     String?                        @default("English")
+  package                      String?
+  packageDate                  DateTime?
+  status                       String                         @default("Active")
+  adminFirstName               String?
+  adminLastName                String?
+  adminEmail                   String?
+  customerFirstName            String?
+  customerLastName             String?
+  customerEmail                String?
+  loginAllowed                 Boolean                        @default(false)
+  createdAt                    DateTime                       @default(now())
+  updatedAt                    DateTime                       @updatedAt
+  trialStartDate               DateTime?
+  trialEndDate                 DateTime?
+  isTrialExpired               Boolean                        @default(false)
+  moduleId                     String?
+  clients                      Client[]
+  departments                  Department[]
+  designations                 Designation[]
+  invoices                     Invoice[]                      @relation("CompanyInvoices")
+  users                        User[]
+  CompanyModules               CompanyModules[]
+  appreciations                Appreciation[]
+  attendance                   Attendance[]
+  billingAddress               BillingAddress?
+  notificationPreferences      CompanyNotificationPreference?
+  subscription                 CompanySubscription?
+  impersonationSessions        ImpersonationSession[]         @relation("CompanyImpersonations")
+  paymentGatewayConfigurations PaymentGatewayConfiguration[]
+  paymentMethods               PaymentMethod[]
+  securitySettings             SecuritySettings?
+
+  @@map("companies")
+}
+
+model SystemSettings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+model Package {
+  id               String                @id @default(cuid()) @db.VarChar(191)
+  packageType      String                @db.VarChar(191)
+  name             String                @db.VarChar(191)
+  type             String                @db.VarChar(191)
+  maxEmployees     Int
+  positionNo       Int
+  private          Boolean               @default(false)
+  recommended      Boolean               @default(false)
+  monthly_currency String?               @db.VarChar(191)
+  yearly_currency  String?               @db.VarChar(191)
+  hasMonthly       Boolean               @default(false)
+  monthlyPrice     Float?
+  hasAnnual        Boolean               @default(false)
+  annualPrice      Float?
+  features         Json                  @db.Json
+  modules          Json                  @db.Json
+  createdAt        DateTime              @default(dbgenerated("CURRENT_TIMESTAMP(3)"))
+  updatedAt        DateTime              @default(dbgenerated("CURRENT_TIMESTAMP(3)")) @updatedAt
+  subscriptions    CompanySubscription[]
+}
+
+model Client {
+  id                   String    @id @default(cuid())
+  clientId             String    @unique
+  companyId            String?
+  salutation           String?
+  firstName            String
+  lastName             String
+  email                String    @unique
+  phone                String?
+  mobile               String?
+  address              String?
+  city                 String?
+  state                String?
+  zipCode              String?
+  postalCode           String?
+  company              String?
+  companyAddress       String?
+  country              String?   @default("United States")
+  gender               String?   @default("Male")
+  language             String?   @default("English")
+  loginAllowed         Boolean   @default(false)
+  receiveNotifications Boolean   @default(false)
+  officialWebsite      String?
+  taxName              String?
+  officePhone          String?
+  status               String    @default("Active")
+  notes                String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  companyRef           Company?  @relation(fields: [companyId], references: [id])
+  invoices             Invoice[] @relation("ClientInvoices")
+}
+
+model Module {
+  id                 String                    @id @default(cuid())
+  name               String                    @unique
+  description        String?
+  category           String?
+  isActive           Boolean                   @default(true)
+  sortOrder          Int?
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  code               String                    @unique
+  featureAssignments ModuleFeatureAssignment[]
+  CompanyModules     CompanyModules[]
+}
+
+model Feature {
+  id                String                    @id @default(cuid())
+  name              String                    @unique
+  description       String?
+  category          String?
+  isActive          Boolean                   @default(true)
+  sortOrder         Int?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  moduleAssignments ModuleFeatureAssignment[]
+}
+
+model ModuleFeatureAssignment {
+  id          String   @id @default(cuid())
+  moduleId    String
+  featureId   String
+  userId      String?
+  companyId   String?
+  enabled     Boolean  @default(true)
+  sortOrder   Int?
+  permissions Json?
+  customLabel String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  feature     Feature  @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([moduleId, featureId, userId])
+  @@index([userId])
+  @@index([companyId])
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  task        String
+  description String?
+  started     Boolean   @default(false)
+  program     String?
+  design      String?
+  date        DateTime?
+  approved    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Invoice {
+  id           String    @id @default(cuid())
+  invoiceId    String    @unique
+  companyId    String?
+  clientId     String?
+  projectName  String?
+  duration     String?
+  startDate    DateTime?
+  endDate      DateTime?
+  amount       Float
+  paidAmount   Float?    @default(0)
+  unpaidAmount Float?
+  status       String    @default("Unpaid")
+  dueDate      DateTime?
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  client       Client?   @relation("ClientInvoices", fields: [clientId], references: [id])
+  company      Company?  @relation("CompanyInvoices", fields: [companyId], references: [id])
+}
+
+model Lead {
+  id          String   @id @default(cuid())
+  leadId      String   @unique
+  companyId   String?
+  contactName String
+  email       String
+  phone       String?
+  company     String?
+  leadSource  String?
+  leadOwner   String?
+  status      String   @default("New")
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Employee {
+  id                    String       @id @default(cuid())
+  employeeId            String       @unique
+  companyId             String?
+  salutation            String?
+  firstName             String
+  lastName              String
+  email                 String       @unique
+  phone                 String?
+  designation           String?
+  department            String?
+  dateOfJoining         DateTime?
+  dateOfBirth           DateTime?
+  gender                String?
+  address               String?
+  city                  String?
+  state                 String?
+  postalCode            String?
+  country               String?      @default("United States")
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  salary                Float?
+  status                String       @default("Active")
+  employeeType          String?      @default("Full-time")
+  reportingManager      String?
+  notes                 String?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+  leaves                Leave[]      @relation("EmployeeLeaves")
+  attendance            Attendance[]
+}
+
+model Leave {
+  id         String   @id @default(cuid())
+  employeeId String
+  leaveType  String
+  leaveDate  DateTime
+  duration   String   @default("Full Day")
+  status     String   @default("Pending")
+  reason     String?
+  paid       Boolean  @default(false)
+  attachment String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  employee   Employee @relation("EmployeeLeaves", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+}
+
+model Report {
+  id            String    @id @default(cuid())
+  reportId      String    @unique
+  companyId     String?
+  title         String
+  description   String?
+  reportType    String
+  status        String    @default("In Progress")
+  assignedTo    String?
+  dueDate       DateTime?
+  completedDate DateTime?
+  priority      String    @default("Medium")
+  project       String?
+  client        String?
+  data          Json?     @db.Json
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Order {
+  id        String    @id @default(cuid())
+  orderId   String    @unique
+  companyId String?
+  clientId  String?
+  orderDate DateTime  @default(now())
+  dueDate   DateTime?
+  total     Float
+  status    String    @default("Pending")
+  items     Json      @db.Json
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Designation {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  department  String?
+  level       String?
+  companyId   String?
+  status      String   @default("Active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  company     Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  status      String   @default("Active")
+  companyId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  company     Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model Holiday {
+  id          String   @id @default(cuid())
+  name        String
+  date        DateTime
+  type        String
+  description String?
+  status      String   @default("Active")
+  companyId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ImpersonationSession {
+  id                    String   @id @default(cuid())
+  originalUserId        String
+  impersonatedUserId    String
+  impersonatedCompanyId String
+  sessionToken          String   @unique
+  expiresAt             DateTime
+  createdAt             DateTime @default(now())
+  company               Company  @relation("CompanyImpersonations", fields: [impersonatedCompanyId], references: [id], onDelete: Cascade)
+  impersonatedUser      User     @relation("ImpersonatedUser", fields: [impersonatedUserId], references: [id], onDelete: Cascade)
+  originalUser          User     @relation("OriginalUser", fields: [originalUserId], references: [id], onDelete: Cascade)
+
+  @@map("impersonation_sessions")
+}
+
+model Appreciation {
+  id        String   @id @default(cuid())
+  award     String
+  givenTo   String
+  givenOn   DateTime
+  summary   String?
+  photo     String?
+  companyId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  company   Company? @relation(fields: [companyId], references: [id])
+
+  @@map("appreciations")
+}
+
+model Attendance {
+  id                  String   @id @default(cuid())
+  employeeId          String
+  companyId           String
+  date                DateTime
+  clockIn             String?
+  clockOut            String?
+  clockInLocation     String?  @default("Office")
+  clockOutLocation    String?  @default("Office")
+  clockInWorkingFrom  String?  @default("Office")
+  clockOutWorkingFrom String?  @default("Office")
+  isLate              Boolean  @default(false)
+  isHalfDay           Boolean  @default(false)
+  status              String   @default("present")
+  notes               String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  company             Company  @relation(fields: [companyId], references: [id])
+  employee            Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, date, companyId], name: "employeeId_date_companyId")
+  @@map("attendance")
+}
+
+model SupportTicket {
+  id             String    @id @default(cuid())
+  ticketNumber   String    @unique
+  subject        String
+  description    String?
+  requesterName  String?
+  requesterEmail String?
+  companyId      String?
+  companyName    String?
+  priority       String    @default("Medium")
+  status         String    @default("Open")
+  category       String?   @default("General")
+  attachments    Json?     @db.Json
+  assignedTo     String?
+  resolvedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@map("support_tickets")
+}
+
+model LoginDevice {
+  id             String   @id @default(cuid())
+  userId         String
+  deviceName     String?
+  browser        String?
+  browserVersion String?
+  os             String?
+  osVersion      String?
+  deviceType     String?
+  ipAddress      String?
+  userAgent      String?
+  location       String?
+  lastLogin      DateTime @default(now())
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, userAgent], name: "userId_userAgent")
+  @@index([userId])
+  @@map("login_devices")
+}
+
+model SmsVerification {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  phoneNumber String
+  code        String
+  expiresAt   DateTime
+  verified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sms_verifications")
+}
+
+model Language {
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
+  flag      String?
+  rtlStatus Boolean  @default(false)
+  status    Boolean  @default(true)
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("languages")
+}
+
+model Currency {
+  id        String   @id @default(cuid())
+  name      String
+  symbol    String
+  code      String   @unique
+  rate      Float    @default(1)
+  format    String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("currencies")
+}
+
+model PaymentMethod {
+  id                    String   @id @default(cuid())
+  companyId             String
+  cardNumber            String
+  cardholderName        String
+  expiryMonth           String
+  expiryYear            String
+  cardType              String
+  isDefault             Boolean  @default(false)
+  stripePaymentMethodId String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  company               Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("payment_methods")
+}
+
+model BillingAddress {
+  id           String   @id @default(cuid())
+  companyId    String   @unique
+  companyName  String?
+  billingEmail String?
+  taxId        String?
+  vatNumber    String?
+  phoneNumber  String?
+  country      String?
+  address1     String?
+  address2     String?
+  city         String?
+  state        String?
+  zipCode      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("billing_addresses")
+}
+
+model CompanySubscription {
+  id                   String    @id @default(cuid())
+  companyId            String    @unique
+  packageId            String
+  status               String    @default("active")
+  startDate            DateTime  @default(now())
+  endDate              DateTime?
+  nextBillingDate      DateTime?
+  amount               Float
+  currency             String    @default("USD")
+  billingCycle         String    @default("monthly")
+  stripeSubscriptionId String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  company              Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  package              Package   @relation(fields: [packageId], references: [id])
+
+  @@map("company_subscriptions")
+}
+
+model CompanyNotificationPreference {
+  id                     String   @id @default(cuid())
+  companyId              String   @unique
+  newForYouEmail         Boolean  @default(true)
+  newForYouBrowser       Boolean  @default(true)
+  newForYouApp           Boolean  @default(true)
+  accountActivityEmail   Boolean  @default(true)
+  accountActivityBrowser Boolean  @default(true)
+  accountActivityApp     Boolean  @default(true)
+  newBrowserEmail        Boolean  @default(true)
+  newBrowserBrowser      Boolean  @default(true)
+  newBrowserApp          Boolean  @default(false)
+  newDeviceEmail         Boolean  @default(true)
+  newDeviceBrowser       Boolean  @default(false)
+  newDeviceApp           Boolean  @default(false)
+  notificationFrequency  String   @default("online")
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  company                Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("company_notification_preferences")
+}
+
+model PaymentGatewayConfiguration {
+  id                   String   @id @default(cuid())
+  companyId            String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  provider             String
+  environment          String
+  isActive             Boolean  @default(true)
+  paypalClientId       String?
+  paypalClientSecret   String?
+  paypalWebhookId      String?
+  stripePublishableKey String?
+  stripeSecretKey      String?
+  stripeWebhookSecret  String?
+  company              Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, provider, environment])
+  @@map("payment_gateway_configurations")
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  module      String?
+  action      String?
+  resource    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String   @id @default(cuid())
+  roleId       String
+  permissionId String
+  granted      Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model SecuritySettings {
+  id                    String   @id @default(cuid())
+  companyId             String?  @unique
+  twoFactorEnabled      Boolean  @default(false)
+  emailTwoFactorEnabled Boolean  @default(false)
+  googleAuthEnabled     Boolean  @default(false)
+  recaptchaEnabled      Boolean  @default(false)
+  recaptchaSiteKey      String?
+  recaptchaSecretKey    String?
+  smtpConfigured        Boolean  @default(false)
+  passwordPolicy        Json?    @default("{\"minLength\": 8, \"requireNumbers\": true, \"requireLowercase\": true, \"requireUppercase\": true, \"requireSpecialChars\": true}")
+  sessionTimeout        Int?     @default(30)
+  maxLoginAttempts      Int?     @default(5)
+  lockoutDuration       Int?     @default(15)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  company               Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("security_settings")
+}
+
+model AdminFAQ {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [createdBy], references: [id])
+}
+
+model CompanyModules {
+  A         String
+  B         String
+  companies Company @relation(fields: [A], references: [id], onDelete: Cascade)
+  Module    Module  @relation(fields: [B], references: [id], onDelete: Cascade)
+
+  @@id([A, B], map: "_CompanyModules_AB_pkey")
+  @@index([B], map: "_CompanyModules_B_index")
+  @@map("_CompanyModules")
+}
+
+enum OTPType {
+  EMAIL
+  SMS
+}
+
+enum OTPPurpose {
+  REGISTRATION
+  LOGIN
+  SENSITIVE_OPERATION
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  INCOMPLETE
+  TRIALING
+}
+
+enum otp_purpose {
+  REGISTRATION
+  LOGIN
+  SENSITIVE_OPERATION
+}
+
+enum otp_type {
+  EMAIL
+  SMS
+}
+
+enum subscription_status {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  INCOMPLETE
+  TRIALING
+}
+
+enum user_role {
+  SUPER_ADMIN
+  ADMIN
+  STAFF
+  EMPLOYEE
+  SUPPLIER
+}

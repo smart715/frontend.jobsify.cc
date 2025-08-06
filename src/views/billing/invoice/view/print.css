@@ -1,0 +1,27 @@
+
+@media print {
+  .previewCard {
+    box-shadow: none !important;
+    border: none !important;
+  }
+  
+  .previewCard .MuiCardContent-root {
+    padding: 0 !important;
+  }
+  
+  body * {
+    visibility: hidden;
+  }
+  
+  .previewCard,
+  .previewCard * {
+    visibility: visible;
+  }
+  
+  .previewCard {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+  }
+}

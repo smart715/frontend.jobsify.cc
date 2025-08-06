@@ -1,0 +1,10 @@
+
+{
+  "extends": ["next/core-web-vitals"],
+  "rules": {
+    "import/order": "off",
+    "padding-line-between-statements": "off",
+    "newline-before-return": "off",
+    "@next/next/no-assign-module-variable": "off"
+  }
+}

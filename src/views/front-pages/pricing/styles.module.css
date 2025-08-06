@@ -1,0 +1,20 @@
+.tableHead {
+  tr th:not(:first-child) {
+    text-align: center;
+  }
+  tr th {
+    text-transform: capitalize;
+  }
+}
+
+.tableBody {
+  tr td:not(:first-child) {
+    text-align: center;
+  }
+  tr td {
+    text-transform: capitalize;
+  }
+  tr:nth-child(even) {
+    background-color: var(--mui-palette-action-hover);
+  }
+}
